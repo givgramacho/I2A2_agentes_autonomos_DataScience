@@ -1,0 +1,14 @@
+{
+    "nodes": [
+      {"id":"upload","type":"file_upload","desc":"Upload CSV"},
+      {"id":"load","type":"load_csv","desc":"Load CSV into DF"},
+      {"id":"analysis","type":"agent","desc":"Agent decides tool & runs EDA tools"},
+      {"id":"plots","type":"plot","desc":"Plot generator (histogram, scatter...)"},
+      {"id":"memory","type":"memory","desc":"Save insights to memory (vectorstore)"},
+      {"id":"output","type":"ui","desc":"Return text + image"}
+    ],
+    "edges": [
+      ["upload","load"],["load","analysis"],["analysis","plots"],["analysis","memory"],["plots","output"],["memory","output"]
+    ]
+  }
+  

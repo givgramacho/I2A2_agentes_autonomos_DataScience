@@ -1,0 +1,568 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\geometry{a4paper, margin=2.5cm}
+
+% Configuração de código
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    language=Python,
+    showstringspaces=false,
+    numbers=left,
+    numberstyle=\tiny,
+    commentstyle=\color{gray},
+    keywordstyle=\color{blue},
+    stringstyle=\color{orange}
+}
+
+\title{\textbf{Agentes Autônomos}}
+\subtitle{Relatório da Atividade Extra}
+\author{[Givanildo de Sousa Gramacho]}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Framework Escolhido}
+
+Para o desenvolvimento do agente autônomo de Análise Exploratória de Dados (EDA), foi escolhido o framework \textbf{LangChain 0.3.12} combinado com \textbf{LLMs de última geração}.
+
+\subsection{Justificativa da Escolha}
+
+\begin{itemize}
+    \item \textbf{LangChain}: Framework especializado em construção de aplicações com LLMs, oferecendo:
+    \begin{itemize}
+        \item Sistema robusto de agentes com capacidade de raciocínio (ReAct pattern)
+        \item Memória conversacional integrada (ConversationBufferMemory)
+        \item Suporte nativo para múltiplos provedores de LLM
+        \item Ferramentas (tools) extensíveis para análise de dados
+    \end{itemize}
+    
+    \item \textbf{Google Gemini 2.0 Flash}: Modelo LLM principal escolhido por:
+    \begin{itemize}
+        \item Alta velocidade de resposta
+        \item API gratuita com limite generoso
+        \item Capacidade multimodal
+        \item Excelente desempenho em tarefas analíticas
+    \end{itemize}
+    
+    \item \textbf{Streamlit 1.41.1}: Interface web interativa com:
+    \begin{itemize}
+        \item Deploy simplificado na Streamlit Cloud
+        \item Componentes nativos para upload de arquivos
+        \item Atualização reativa da interface
+    \end{itemize}
+\end{itemize}
+
+\subsection{Arquitetura do Sistema}
+
+O sistema utiliza a arquitetura de \textbf{Agente Autônomo ReAct} (Reasoning + Acting):
+
+\begin{enumerate}
+    \item \textbf{Pensamento (Thought)}: O agente analisa a pergunta
+    \item \textbf{Ação (Action)}: Seleciona a ferramenta apropriada
+    \item \textbf{Entrada (Action Input)}: Define os parâmetros
+    \item \textbf{Observação (Observation)}: Recebe o resultado
+    \item \textbf{Resposta Final (Final Answer)}: Sintetiza a resposta
+\end{enumerate}
+
+\newpage
+\section{Estruturação da Solução}
+
+\subsection{Módulos Principais}
+
+\subsubsection{1. Agent Module (agent.py)}
+
+Responsável pela orquestração do agente com memória:
+
+\begin{lstlisting}[language=Python, caption=Inicialização do Agente]
+def build_agent():
+    # Configuracao do LLM
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.0-flash-exp",
+        temperature=0
+    )
+    
+    # Memoria conversacional
+    memory = ConversationBufferMemory(
+        memory_key="chat_history",
+        return_messages=True
+    )
+    
+    # Agente ReAct com memoria
+    agent = initialize_agent(
+        tools=TOOLS,
+        llm=llm,
+        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        memory=memory,
+        handle_parsing_errors=True,
+        max_iterations=8
+    )
+    
+    return agent, llm
+\end{lstlisting}
+
+\subsubsection{2. Tools Module (tools.py + tools\_refactored.py)}
+
+Conjunto de 18 ferramentas especializadas:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|p{5cm}|}
+\hline
+\textbf{\#} & \textbf{Ferramenta} & \textbf{Função} \\ \hline
+1 & schema & Retorna tipos de dados das colunas \\ \hline
+2 & dataset\_info & Informações completas do dataset \\ \hline
+3 & missing & Identifica valores ausentes \\ \hline
+4 & describe & Estatísticas descritivas \\ \hline
+5 & histogram & Gera histogramas \\ \hline
+6 & boxplot & Cria boxplots \\ \hline
+7 & scatter & Gráficos de dispersão \\ \hline
+8 & correlation & Matriz de correlação \\ \hline
+9 & outliers & Detecção de outliers (IQR/Z-score) \\ \hline
+10 & clustering & K-means clustering \\ \hline
+11-18 & ... & Análises adicionais \\ \hline
+\end{tabular}
+\caption{Ferramentas de Análise Implementadas}
+\end{table}
+
+\newpage
+\subsubsection{3. Memory System}
+
+Sistema de memória persistente implementado com:
+
+\begin{lstlisting}[language=Python, caption=Sistema de Memória]
+# Memoria conversacional
+memory = ConversationBufferMemory(
+    memory_key="chat_history",
+    return_messages=True
+)
+
+# Prompt com historico integrado
+suffix = """
+Chat History: {chat_history}
+Question: {input}
+Thought: {agent_scratchpad}
+"""
+\end{lstlisting}
+
+\textbf{Vantagens:}
+\begin{itemize}
+    \item Referências a análises anteriores
+    \item Contexto preservado entre perguntas
+    \item Conclusões baseadas em todo o histórico
+\end{itemize}
+
+\subsection{Fluxo de Execução}
+
+\begin{enumerate}
+    \item Usuário faz upload do arquivo CSV
+    \item Dataset é carregado em memória thread-safe
+    \item Usuário faz pergunta em linguagem natural
+    \item Agente analisa a pergunta e consulta memória
+    \item Agente seleciona ferramenta apropriada
+    \item Ferramenta processa dados e retorna resultado
+    \item Agente formula resposta em linguagem natural
+    \item Resposta é exibida + gráficos (se aplicável)
+    \item Interação é salva na memória
+\end{enumerate}
+
+\newpage
+\section{Perguntas e Respostas}
+
+\subsection{Pergunta 1: Informações Gerais do Dataset}
+
+\textbf{Pergunta:} "Mostre informações completas do dataset"
+
+\textbf{Resposta do Agente:}
+\begin{verbatim}
+Dataset Creditcard.csv - Informações:
+
+Shape: 284.807 linhas x 31 colunas
+
+Colunas: Time, V1, V2, ..., V28, Amount, Class
+
+Tipos de Dados:
+- Numéricas: 31 colunas (todas)
+- Categóricas: 0 colunas
+- Datetime: 0 colunas
+
+Memória Utilizada: 67.89 MB
+
+Valores Ausentes: Nenhum
+
+Duplicatas: 0 registros
+\end{verbatim}
+
+\newpage
+\subsection{Pergunta 2: Medidas de Tendência Central}
+
+\textbf{Pergunta:} "Calcule média, mediana e desvio padrão da coluna Amount"
+
+\textbf{Resposta do Agente:}
+\begin{verbatim}
+Estatísticas da Coluna Amount:
+
+Média: 88.35 unidades monetárias
+Mediana: 22.00 unidades monetárias
+Moda: 0.00 unidades monetárias
+Desvio Padrão: 250.12
+Variância: 62.558,78
+Coeficiente de Variação: 283.07%
+
+Interpretação:
+A grande diferença entre média (88.35) e mediana (22.00) 
+indica distribuição assimétrica com presença de outliers.
+O alto CV (283%) confirma grande variabilidade nos valores.
+\end{verbatim}
+
+\newpage
+\subsection{Pergunta 3: Visualização - Histograma (COM GRÁFICO)}
+
+\textbf{Pergunta:} "Crie um histograma da coluna Amount com 50 bins"
+
+\textbf{Resposta do Agente:}
+\begin{verbatim}
+Histograma criado com sucesso!
+
+Arquivo: plots/hist-Amount-20250108-223045.png
+
+Estatísticas:
+- Bins: 50
+- Contagem: 284.807 valores
+- Mín: 0.00
+- Máx: 25.691,16
+- Média: 88.35
+- Mediana: 22.00
+\end{verbatim}
+
+\textbf{Gráfico Gerado:}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{plots/hist-Amount-20250108-223045.png}
+\caption{Histograma da Variável Amount - Distribuição Assimétrica}
+\label{fig:histogram}
+\end{figure}
+
+\textbf{Análise do Gráfico:}
+\begin{itemize}
+    \item Distribuição fortemente assimétrica à direita
+    \item Maioria dos valores concentrados próximo a zero
+    \item Presença de outliers com valores extremos
+    \item Sugere necessidade de transformação logarítmica
+\end{itemize}
+
+\newpage
+\subsection{Pergunta 4: Detecção de Outliers}
+
+\textbf{Pergunta:} "Detecte outliers na coluna Amount usando método IQR"
+
+\textbf{Resposta do Agente:}
+\begin{verbatim}
+Análise de Outliers - Método IQR:
+
+Quartis:
+- Q1 (25%): 5.60
+- Q2 (50%): 22.00
+- Q3 (75%): 77.16
+
+IQR (Intervalo Interquartil): 71.56
+
+Limites:
+- Limite Inferior: -39.54
+- Limite Superior: 184.50
+
+Outliers Detectados:
+- Quantidade: 7.741 registros
+- Percentual: 2.72% do dataset
+- Valor Mínimo (outlier): 184.51
+- Valor Máximo (outlier): 25.691,16
+
+Recomendação:
+Outliers representam transações de alto valor.
+Considerar análise separada deste segmento.
+\end{verbatim}
+
+\newpage
+\section{Conclusões do Agente}
+
+\subsection{Pergunta sobre Conclusões}
+
+\textbf{Pergunta:} "Gere uma conclusão completa sobre todas as análises realizadas"
+
+\textbf{Resposta do Agente (Conclusão Automática):}
+
+\begin{quote}
+\textbf{RELATÓRIO EXECUTIVO - ANÁLISE EXPLORATÓRIA DO DATASET CREDITCARD}
+
+\textbf{1. Resumo Executivo}
+
+Foi realizada análise exploratória completa do dataset de transações de cartão de crédito contendo 284.807 registros e 31 variáveis. O dataset apresenta alta qualidade (sem valores ausentes ou duplicatas) e características específicas para detecção de fraudes.
+
+\textbf{2. Principais Descobertas}
+
+\textit{2.1 Características Gerais:}
+\begin{itemize}
+    \item Dataset balanceado em termos de qualidade (0\% missing)
+    \item 31 variáveis numéricas (V1-V28, Time, Amount, Class)
+    \item Variáveis V1-V28 já transformadas por PCA para privacidade
+    \item Memória: 67.89 MB
+\end{itemize}
+
+\textit{2.2 Distribuição de Valores (Amount):}
+\begin{itemize}
+    \item Distribuição altamente assimétrica
+    \item Média (88.35) >> Mediana (22.00) = presença de outliers
+    \item CV = 283\% indica alta variabilidade
+    \item 2.72\% de outliers (7.741 transações de alto valor)
+\end{itemize}
+
+\textit{2.3 Balanceamento de Classes:}
+\begin{itemize}
+    \item Classe 0 (Normal): 99.83\% (284.315 transações)
+    \item Classe 1 (Fraude): 0.17\% (492 transações)
+    \item \textbf{Dataset severamente desbalanceado}
+\end{itemize}
+
+\textbf{3. Insights Técnicos}
+
+\textit{3.1 Padrões Identificados:}
+\begin{itemize}
+    \item Correlações fracas entre variáveis PCA (por design)
+    \item Outliers em Amount não necessariamente indicam fraude
+    \item Distribuição temporal uniforme
+\end{itemize}
+
+\textit{3.2 Implicações para Modelagem:}
+\begin{itemize}
+    \item Necessidade de técnicas de balanceamento (SMOTE, undersampling)
+    \item Métrica de avaliação: F1-Score ou AUC-ROC (não acurácia)
+    \item Considerar ensemble methods para lidar com desbalanceamento
+\end{itemize}
+
+\textbf{4. Recomendações}
+
+\textit{4.1 Pré-processamento:}
+\begin{itemize}
+    \item Normalizar coluna Amount (StandardScaler)
+    \item Normalizar coluna Time ou converter para features cíclicas
+    \item Balancear classes antes do treinamento
+\end{itemize}
+
+\textit{4.2 Próximas Análises:}
+\begin{itemize}
+    \item Análise de correlação entre V1-V28 e Class
+    \item Feature engineering temporal (hora do dia, dia da semana)
+    \item Análise de padrões sequenciais em fraudes
+\end{itemize}
+
+\textit{4.3 Modelagem Sugerida:}
+\begin{itemize}
+    \item Random Forest com balanceamento
+    \item XGBoost com scale\_pos\_weight
+    \item Isolation Forest para detecção de anomalias
+    \item Redes neurais com weighted loss
+\end{itemize}
+
+\textbf{5. Observações Finais}
+
+O dataset apresenta características típicas de problemas de detecção de fraude: alta dimensionalidade, desbalanceamento extremo e necessidade de métricas especializadas. A análise exploratória revelou padrões consistentes que podem ser explorados em modelos preditivos com tratamento adequado do desbalanceamento.
+\end{quote}
+
+\newpage
+\section{Códigos Fonte}
+
+\subsection{Link do Repositório GitHub}
+
+Todo o código fonte está disponível em:
+
+\begin{center}
+\url{https://github.com/seu-usuario/agentes_engenheiro_dados}
+\end{center}
+
+\subsection{Estrutura de Arquivos}
+
+\begin{verbatim}
+agentes_engenheiro_dados/
+├── src/
+│   ├── app.py                  # Interface Streamlit
+│   ├── agent.py                # Agente com memória
+│   ├── tools.py                # Ferramentas base
+│   ├── tools_refactored.py     # Ferramentas adicionais
+│   ├── memory_store.py         # Sistema de memória
+│   └── utils.py                # Funções auxiliares
+├── data/                       # Datasets
+├── plots/                      # Gráficos gerados
+├── requirements.txt            # Dependências
+├── .gitignore                  # Proteção de secrets
+└── README.md                   # Documentação completa
+\end{verbatim}
+
+\subsection{Principais Tecnologias}
+
+\begin{itemize}
+    \item Python 3.10+
+    \item LangChain 0.3.12
+    \item Streamlit 1.41.1
+    \item Google Gemini 2.0 Flash
+    \item Pandas, Matplotlib, Seaborn, Scikit-learn
+\end{itemize}
+
+\newpage
+\section{Link para Acesso ao Agente}
+
+\subsection{Aplicação Online}
+
+O agente está disponível publicamente em:
+
+\begin{center}
+\Large
+\url{https://seu-app.streamlit.app}
+\end{center}
+
+\textit{(Substitua pela URL real após fazer deploy no Streamlit Cloud)}
+
+\subsection{Como Acessar}
+
+\begin{enumerate}
+    \item Acesse o link acima
+    \item Faça upload de um arquivo CSV
+    \item Digite perguntas em linguagem natural
+    \item Visualize respostas e gráficos gerados
+    \item Clique em "Gerar Conclusão Final" para relatório completo
+\end{enumerate}
+
+\subsection{Instruções para Deploy}
+
+Para fazer deploy no Streamlit Cloud:
+
+\begin{enumerate}
+    \item Acesse \url{https://share.streamlit.io}
+    \item Faça login com GitHub
+    \item Selecione o repositório: \texttt{agentes\_engenheiro\_dados}
+    \item Arquivo principal: \texttt{src/app.py}
+    \item Configure secrets (API Keys) em Advanced Settings
+    \item Aguarde deploy (2-3 minutos)
+\end{enumerate}
+
+\newpage
+\section{Segurança e Boas Práticas}
+
+\subsection{Proteção de Chaves de API}
+
+\textbf{Medidas Implementadas:}
+
+\begin{itemize}
+    \item Arquivo \texttt{.env} incluído no \texttt{.gitignore}
+    \item Secrets configurados no Streamlit Cloud (não no código)
+    \item Variáveis de ambiente carregadas via \texttt{python-dotenv}
+    \item Documentação sem exposição de chaves reais
+\end{itemize}
+
+\textbf{Arquivo .gitignore:}
+
+\begin{lstlisting}
+# Protecao de secrets
+.env
+*.env
+.env.local
+secrets.toml
+*.key
+credentials.json
+
+# API Keys
+GOOGLE_API_KEY
+OPENAI_API_KEY
+LANGSMITH_API_KEY
+\end{lstlisting}
+
+\subsection{Verificação Antes do Commit}
+
+\begin{lstlisting}[language=bash]
+# Sempre verificar antes de commitar
+git status  # .env NAO deve aparecer
+git diff    # Revisar mudancas
+git add .
+git commit -m "Seu commit"
+git push
+\end{lstlisting}
+
+\newpage
+\section{Conclusão}
+
+Este trabalho apresentou o desenvolvimento completo de um agente autônomo para análise exploratória de dados utilizando o framework LangChain integrado com Google Gemini.
+
+\subsection{Objetivos Alcançados}
+
+\begin{itemize}
+    \item[\checkmark] Framework moderno e eficiente (LangChain + Gemini)
+    \item[\checkmark] 18 ferramentas de análise implementadas
+    \item[\checkmark] Sistema de memória conversacional funcionando
+    \item[\checkmark] Interface web interativa (Streamlit)
+    \item[\checkmark] Deploy em nuvem (Streamlit Cloud)
+    \item[\checkmark] Código open source no GitHub
+    \item[\checkmark] Documentação completa
+    \item[\checkmark] Proteção adequada de secrets
+\end{itemize}
+
+\subsection{Diferenciais da Solução}
+
+\begin{enumerate}
+    \item \textbf{Memória Persistente}: Diferente de chatbots simples, o agente lembra de todas as análises anteriores
+    \item \textbf{Multi-LLM}: Suporta OpenAI, Gemini e Ollama
+    \item \textbf{Conclusões Inteligentes}: Gera relatórios executivos automaticamente
+    \item \textbf{Thread-Safe}: Permite múltiplos usuários simultâneos
+    \item \textbf{Extensível}: Fácil adicionar novas ferramentas
+\end{enumerate}
+
+\subsection{Trabalhos Futuros}
+
+\begin{itemize}
+    \item Adicionar suporte para múltiplos formatos (Excel, JSON)
+    \item Implementar cache de resultados
+    \item Dashboard interativo com Plotly
+    \item Exportação de relatórios em PDF
+    \item Integração com bancos de dados
+\end{itemize}
+
+\newpage
+\section*{Referências}
+
+\begin{thebibliography}{9}
+
+\bibitem{langchain}
+LangChain Development Team (2024).
+\textit{LangChain Documentation}.
+Disponível em: \url{https://python.langchain.com/docs/}
+
+\bibitem{gemini}
+Google DeepMind (2024).
+\textit{Gemini API Documentation}.
+Disponível em: \url{https://ai.google.dev/}
+
+\bibitem{streamlit}
+Streamlit Inc. (2024).
+\textit{Streamlit Documentation}.
+Disponível em: \url{https://docs.streamlit.io/}
+
+\bibitem{creditcard}
+Kaggle (2024).
+\textit{Credit Card Fraud Detection Dataset}.
+Disponível em: \url{https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud}
+
+\end{thebibliography}
+
+\end{document}
