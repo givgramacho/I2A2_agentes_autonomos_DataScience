@@ -187,7 +187,7 @@ agentes_engenheiro_dados/
 ## 🛠️ Tecnologias Utilizadas
 
 | Tecnologia | Versão | Descrição |
-|------------|--------|-----------||
+|------------|--------|-----------|
 | **Python** | 3.10+ | Linguagem principal |
 | **LangChain** | 0.3.12 | Framework de agentes |
 | **Streamlit** | 1.41.1 | Interface web |
