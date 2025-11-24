@@ -1,7 +1,7 @@
 # Projeto: Agente Genérico de EDA para CSV
 
 **Pasta do projeto:** `@agentes_engenheiro_dados`
-**Data / Referência do enunciado:** 1_00_Descrição da Atividade Obrigatória - 2025-09-15.pdf. :contentReference[oaicite:2]{index=2}
+**Data / Referência do enunciado:** 1_00_Descrição da Atividade Obrigatória - 2025-09-15.pdf.
 
 ## Objetivo
 

@@ -278,5 +278,5 @@ O agente está pronto para atender todos os objetivos do projeto:
 ---
 
 **Desenvolvido em:** 2025-10-08  
-**Autor:** Cascade AI Assistant  
+**Autor:** Givanildo de Sousa Gramacho 
 **Projeto:** Agente Genérico de EDA para CSV
