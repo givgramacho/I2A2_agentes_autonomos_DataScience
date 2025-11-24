@@ -157,3 +157,10 @@ credentials.json
 temp/
 tmp/
 *.tmp
+
+# Local documentation files (keep only README.md on GitHub)
+relatorio.tex
+README_prinicipal.md
+MELHORIAS_IMPLEMENTADAS.md
+DEPLOY_GUIDE.md
+*.pdf
