@@ -416,7 +416,7 @@ def central_tendency_tool(params: str) -> str:
 def variability_tool(params: str) -> str:
     """
     Calcula variância, desvio padrão e coeficiente de variação.
-    params: "column=Amount"
+    das variaveis numéricas do dataset.
     """
     df = get_dataframe()
     if df is None:
@@ -477,7 +477,7 @@ def range_tool(params: str) -> str:
 @tool
 def class_balance_tool(dummy: str) -> str:
     """
-    Mostra o balanceamento das classes se existir coluna 'Class'.
+    Mostra o balanceamento das classes se existir coluna de classe do dataset.
     """
     df = get_dataframe()
     if df is None:
