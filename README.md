@@ -54,7 +54,7 @@ agentes_engenheiro_dados/
 
 ### 🌐 Demo Online
 
-👉 **[Acessar Aplicação](https://seu-app.streamlit.app)** _(disponível após deploy)_
+👉 **[Acessar Aplicação](https://i2a2-agentes-autonomos-datascience.streamlit.app/)** _(disponível após deploy)_
 
 ### 💻 Execução Local com UV
 
