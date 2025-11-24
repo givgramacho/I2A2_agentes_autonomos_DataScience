@@ -293,14 +293,6 @@ black src/
 
 ---
 
-## 📚 Documentação
-
-- **[DEPLOY_GUIDE.md](DEPLOY_GUIDE.md)** - Guia completo de deploy
-- **[DOCUMENTO_PROJETO.md](DOCUMENTO_PROJETO.md)** - Especificação técnica
-- **[MELHORIAS_IMPLEMENTADAS.md](MELHORIAS_IMPLEMENTADAS.md)** - Histórico de melhorias
-
----
-
 ## 🤝 Contribuição
 
 ### Como Contribuir
