@@ -331,7 +331,7 @@ Este projeto está licenciado sob a **MIT License** - veja o arquivo [LICENSE](L
 
 **Givanildo Gramacho**GitHub: [@givgramacho](https://github.com/givgramacho)
 
-- LinkedIn: [Givanildo Gramacho](https://linkedin.com/in/givanildo-gramacho)
+- LinkedIn: [Givanildo Gramacho](https://www.linkedin.com/in/givanildo-gramacho-915552176/)
 
 ---
 
