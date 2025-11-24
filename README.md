@@ -100,7 +100,9 @@ cp .env.example .env
 streamlit run src/app.py
 ```
 
-Acesse: http://localhost:8501
+Acesse seu link: http://localhost:8501 
+ou 
+[**Aplicação após deploy no Streamlit em :** https://i2a2-agentes-autonomos-datascience.streamlit.app/](https://i2a2-agentes-autonomos-datascience.streamlit.app/)
 
 ### 🐳 Execução com Docker
 
